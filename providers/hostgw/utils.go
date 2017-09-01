@@ -19,7 +19,7 @@ func getHostSubnet(host metadata.Host) (*net.IPNet, error) {
 
 func getCurrentRouteEntries(host metadata.Host) (map[string]*netlink.Route, error) {
 	routeFilter := &netlink.Route{Src: net.ParseIP(host.AgentIP)}
-	existRoutes, err := netlink.RouteListFiltered(netlink.FAMILY_V4, routeFilter, netlink.RT_FILTER_OIF)
+	existRoutes, err := netlink.RouteListFiltered(netlink.FAMILY_V4, routeFilter, netlink.RT_FILTER_SRC)
 	if err != nil {
 		logrus.Errorf("Failed to getCurrentRouteEntries, RouteList: %v", err)
 		return nil, err
