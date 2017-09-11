@@ -27,8 +27,10 @@ func getCurrentRouteEntries(host metadata.Host) (map[string]*netlink.Route, erro
 
 	routeEntries := make(map[string]*netlink.Route)
 	for index, r := range existRoutes {
-		gwIP := r.Gw.String()
-		routeEntries[gwIP] = &existRoutes[index]
+		if !r.Dst.Contains(net.ParseIP(host.AgentIP)) {
+			gwIP := r.Gw.String()
+			routeEntries[gwIP] = &existRoutes[index]
+		}
 	}
 
 	logrus.Debugf("getCurrentRouteEntries: routeEntries %v", routeEntries)
@@ -45,10 +47,9 @@ func getDesiredRouteEntries(selfHost metadata.Host, allHosts []metadata.Host) (m
 				return nil, err
 			}
 			r := &netlink.Route{
-				Scope: netlink.SCOPE_UNIVERSE,
-				Dst:   dst,
-				Src:   net.ParseIP(selfHost.AgentIP),
-				Gw:    net.ParseIP(h.AgentIP),
+				Dst: dst,
+				Src: net.ParseIP(selfHost.AgentIP),
+				Gw:  net.ParseIP(h.AgentIP),
 			}
 			routeEntries[h.AgentIP] = r
 		}
@@ -65,7 +66,6 @@ func updateRoutes(oldEntries map[string]*netlink.Route, newEntries map[string]*n
 		_, ok := newEntries[ip]
 		if ok {
 			delete(newEntries, ip)
-
 		} else {
 			err := netlink.RouteDel(oe)
 			if err != nil {
